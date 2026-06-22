@@ -28,8 +28,10 @@ streamlit run app.py
 
 1. Push this folder to a GitHub repository.
 2. In Streamlit Cloud, choose the repository and set the main file path to `app.py`.
-3. Make sure the installed packages come from [requirements.txt](requirements.txt).
-4. Add secrets only if you want the optional OpenAI assistant, then set `OPENAI_API_KEY` in Streamlit Cloud secrets.
+3. Keep [runtime.txt](runtime.txt) in the repo so Streamlit Cloud uses Python 3.11 (avoids Python 3.14 build failures).
+4. Make sure the installed packages come from [requirements.txt](requirements.txt).
+5. Add secrets only if you want the optional OpenAI assistant, then set `OPENAI_API_KEY` in Streamlit Cloud secrets.
+6. After pushing changes, click Reboot app in Streamlit Cloud.
 
 The app is already configured to run locally with SQLite, so no extra database setup is required for the first cloud test.
 
