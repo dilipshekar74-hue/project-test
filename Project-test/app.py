@@ -2,17 +2,56 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 import random
+import traceback
+from types import SimpleNamespace
 
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
-from core.analytics import build_analysis_result, maintenance_recommendation, score_frame, summarize_frame
-from core.assistant import get_assistant_reply
-from core.config import APP_SUBTITLE, APP_TITLE, ensure_directories
-from core.reports import build_excel_report
-from core.security import verify_password
-from core.storage import get_storage
+CORE_IMPORT_ERROR = None
+CORE_IMPORT_TRACE = ""
+
+try:
+    from core.analytics import build_analysis_result, maintenance_recommendation, score_frame, summarize_frame
+    from core.assistant import get_assistant_reply
+    from core.config import APP_SUBTITLE, APP_TITLE, ensure_directories
+    from core.reports import build_excel_report
+    from core.security import verify_password
+    from core.storage import get_storage
+except Exception as exc:  # pragma: no cover - startup diagnostics for cloud deploys
+    CORE_IMPORT_ERROR = exc
+    CORE_IMPORT_TRACE = traceback.format_exc()
+
+    APP_TITLE = "Machine Insight MML Studio"
+    APP_SUBTITLE = "Startup diagnostics mode"
+
+    def ensure_directories() -> None:
+        return
+
+    def verify_password(password: str, password_hash: str) -> bool:
+        return False
+
+    def get_storage():
+        raise RuntimeError("Core storage module failed to import.")
+
+    def get_assistant_reply(message: str, summary: dict | None = None) -> str:
+        return "Assistant is unavailable because core modules failed to load."
+
+    def summarize_frame(frame: pd.DataFrame) -> dict:
+        return {"machines": 0, "records": 0, "high_risk": 0, "medium_risk": 0, "low_risk": 0}
+
+    def maintenance_recommendation(frame: pd.DataFrame) -> str:
+        return "Maintenance recommendation is unavailable because core modules failed to load."
+
+    def score_frame(frame: pd.DataFrame) -> pd.DataFrame:
+        return frame.copy()
+
+    def build_analysis_result(frame: pd.DataFrame):
+        return SimpleNamespace(frame=frame.copy(), model_name="Unavailable", version_label="n/a", accuracy=0.0)
+
+    def build_excel_report(sheets: dict[str, pd.DataFrame]) -> bytes:
+        return b""
 
 
 st.set_page_config(page_title=APP_TITLE, page_icon="", layout="wide")
@@ -402,6 +441,11 @@ def admin_tab(storage, user: dict) -> None:
 
 
 def main() -> None:
+    if CORE_IMPORT_ERROR is not None:
+        st.error("Core module import failed during startup.")
+        st.code(CORE_IMPORT_TRACE)
+        st.stop()
+
     ensure_directories()
     apply_theme()
     storage = get_storage()
