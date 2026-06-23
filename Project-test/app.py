@@ -15,7 +15,7 @@ CORE_IMPORT_TRACE = ""
 try:
     from core.analytics import build_analysis_result, maintenance_recommendation, score_frame, summarize_frame
     from core.assistant import get_assistant_reply
-    from core.config import APP_SUBTITLE, APP_TITLE, ensure_directories, load_app_settings, save_app_settings
+    import core.config as core_config
     from core.reports import build_excel_report
     from core.security import verify_password
     from core.storage import get_storage
@@ -25,6 +25,24 @@ except Exception as exc:  # pragma: no cover - startup diagnostics for cloud dep
 
     APP_TITLE = "Machine Insight MML Studio"
     APP_SUBTITLE = "Startup diagnostics mode"
+
+    class _FallbackConfig:
+        APP_TITLE = APP_TITLE
+        APP_SUBTITLE = APP_SUBTITLE
+
+        @staticmethod
+        def ensure_directories() -> None:
+            return
+
+        @staticmethod
+        def load_app_settings() -> dict:
+            return {}
+
+        @staticmethod
+        def save_app_settings(settings: dict) -> None:
+            return
+
+    core_config = _FallbackConfig()
 
     def ensure_directories() -> None:
         return
@@ -52,6 +70,13 @@ except Exception as exc:  # pragma: no cover - startup diagnostics for cloud dep
 
     def build_excel_report(sheets: dict[str, pd.DataFrame]) -> bytes:
         return b""
+
+
+APP_TITLE = getattr(core_config, "APP_TITLE", APP_TITLE)
+APP_SUBTITLE = getattr(core_config, "APP_SUBTITLE", APP_SUBTITLE)
+ensure_directories = getattr(core_config, "ensure_directories", ensure_directories)
+load_app_settings = getattr(core_config, "load_app_settings", lambda: {})
+save_app_settings = getattr(core_config, "save_app_settings", lambda settings: None)
 
 
 st.set_page_config(page_title=APP_TITLE, page_icon="", layout="wide")
