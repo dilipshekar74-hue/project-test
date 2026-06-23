@@ -9,6 +9,13 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
+APP_TITLE = "Machine Insight MML Studio"
+APP_SUBTITLE = "Machine analysis, maintenance, reports, and AI assistance"
+
+
+def ensure_directories() -> None:
+    return
+
 CORE_IMPORT_ERROR = None
 CORE_IMPORT_TRACE = ""
 
@@ -23,7 +30,7 @@ except Exception as exc:  # pragma: no cover - startup diagnostics for cloud dep
     CORE_IMPORT_ERROR = exc
     CORE_IMPORT_TRACE = traceback.format_exc()
 
-    APP_TITLE = "Machine Insight MML Studio"
+    APP_TITLE = APP_TITLE
     APP_SUBTITLE = "Startup diagnostics mode"
 
     class _FallbackConfig:
