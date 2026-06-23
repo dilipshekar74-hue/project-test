@@ -15,7 +15,7 @@ CORE_IMPORT_TRACE = ""
 try:
     from core.analytics import build_analysis_result, maintenance_recommendation, score_frame, summarize_frame
     from core.assistant import get_assistant_reply
-    from core.config import APP_SUBTITLE, APP_TITLE, ensure_directories
+    from core.config import APP_SUBTITLE, APP_TITLE, ensure_directories, load_app_settings, save_app_settings
     from core.reports import build_excel_report
     from core.security import verify_password
     from core.storage import get_storage
@@ -425,6 +425,21 @@ def admin_tab(storage, user: dict) -> None:
     st.subheader("Administration")
     st.write("Manage access roles and reset demo credentials here.")
     st.dataframe(storage.list_users(), use_container_width=True)
+
+    current_settings = load_app_settings()
+    current_backend = current_settings.get("db_backend", "sqlite")
+    current_access_path = current_settings.get("access_db_path", "")
+
+    st.markdown("### Database setup")
+    st.caption("SQLite is best for Streamlit Cloud. Access is for a Windows desktop build with Microsoft Access installed.")
+    with st.form("db_settings_form", clear_on_submit=False):
+        db_backend = st.selectbox("Database backend", ["sqlite", "access"], index=0 if current_backend != "access" else 1)
+        access_db_path = st.text_input("Access .accdb path", value=current_access_path)
+        submitted_settings = st.form_submit_button("Save database settings")
+
+    if submitted_settings:
+        save_app_settings({"db_backend": db_backend, "access_db_path": access_db_path.strip()})
+        st.success("Database settings saved. Reboot the app to apply the new backend.")
 
     with st.form("user_form", clear_on_submit=True):
         username = st.text_input("Username")
